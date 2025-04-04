@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include<string.h>
-typedef struct {  // define a Date data type.
+
+// define a Date data type.
+typedef struct {  
     char day[10];
     char month[10];
     char year[10];
@@ -54,9 +56,9 @@ List creatList() {
 }
 //function that load tasks from file 
 /*done*/ void loadTasks(List head) {
-    FILE* open = fopen("tasks.txt", "r");
+    FILE* in = fopen("tasks.txt", "r");
     char taskSize[200]; //maximum length of line (task)
-	if (open == NULL) {
+	if (in == NULL) {
 		printf("file is not exist!\n");
 		return;
 	}
@@ -64,11 +66,11 @@ List creatList() {
         head = creatList();
         return;
     }
-    while(fgets(taskSize,sizeof(taskSize),open)!=NULL){ //read file line by line and store each data in Task linkelist
+    while(fgets(taskSize,sizeof(taskSize), in)!=NULL){ //read file line by line and store each data in Task linkelist
         Task newTask = (Task)malloc(sizeof(struct task)); //creat a new Task + store the value inside it + let it points to null 
         if (newTask == NULL) {
             printf("Memory allocation failed!\n");
-            fclose(open);
+            fclose(in);
             return;
         }
         char* token = strtok(taskSize, "#");
@@ -127,9 +129,9 @@ List creatList() {
         }
     }
     printf("Tasks have been loaded Successfully:)\n\n");
-    fclose(open);
+    fclose(in);
 }
-//function that search for tha task using id
+//function that search for tha task using id or name
 /*done*/bool searchTask(Task head) {
     if (head == NULL) {
         printf("Linked List Not Found..\n");
@@ -350,6 +352,14 @@ List creatList() {
     }
 
 }
+//function finds the last node of the list
+/*done*/List findTail(List list) {
+    List tail = list;
+    while (tail->next != NULL) {
+        tail = tail->next;
+    }
+    return tail;
+}
 //function that perform a task
 /*done*/void performTask(List head, List perform) {
     printf("Enter task ID to perform:\n");
@@ -381,7 +391,6 @@ void unperformedTask(List head) {
         while (unperformTask != NULL) {
             flag = false;
             if (strcmp(unperformTask->ID , id)==0) {
-               // strcpy(unperformTask->status, "unperformed");
                 flag = true;
                 return;
             }
@@ -393,7 +402,7 @@ void unperformedTask(List head) {
         printf("the task you're trying to perform is not exists\n");
     }
 }
-//function that print the unperformed tasks
+//function that print  unperformed tasks
 void printUnperformed(Task head) {
     if (head == NULL || head->next == NULL) {
         printf("Linked List Not Found..\n");
@@ -405,15 +414,11 @@ void printUnperformed(Task head) {
     }
     Task ptr = head->next;
     while (ptr != NULL) {
-        /*
-        if (strcmp(ptr->status , "unperformed")==0) {
-            printf("ID: %d, Name: %s, Date: %d/%d/%d, Duration:%.2lf hours\n", ptr->ID, ptr->name, ptr->date.day, ptr->date.month, ptr->date.year, ptr->duration);
-        }*/
         ptr = ptr->next;
     }
     printf("\n============================\n");
 }
-//function that prints the tasks 
+//function that prints  tasks 
 /*done*/void printTasks(Task head) {
     if (head == NULL || head->next==NULL) {
         printf("Linked List Not Found..\n");
@@ -430,17 +435,143 @@ void printUnperformed(Task head) {
     }
     printf("\n============================\n");
 }
-void Exit() {
-    printf("Good Bye:)\n");
+/*done*/void undo(List head, List perform) {
+    if (head == NULL || head->next == NULL || perform == NULL || perform->next == NULL) {
+        printf("the list is empty or not found!\n");
+        return;
+    }
+
+    //get last task for each linked list
+    List currPerform = findTail(perform);
+    List prevPerform = perform;
+
+    //points to the previous node of tail
+    while (prevPerform->next->next != NULL) {
+        prevPerform = prevPerform->next;
+    }
+    prevPerform->next = NULL;
+    List currHead = findTail(head);
+    
+    //If the node is empty then the head will points to the first node
+    if (head->next == NULL) { 
+        head->next = currPerform;
+    }
+    else { // if the list was'nt empty 
+        currHead->next = currPerform;
+    }
+    printf("undo the last task successfully:)\n");
+}
+/*done*/void undoneTask(List head,List undone) {
+    if (head == NULL || head->next == NULL) {
+        printf("the list is empty or not found!\n");
+        return;
+    }
+    char id[10];
+    printf("Enter task ID:\n");
+    scanf("%s", id);
+
+    bool flag = false;
+
+    List fast = head->next;
+    List slow = head;
+    List tail = findTail(head);// find the last node of the main list
+
+    while (fast != NULL) {
+        if (strcmp(fast->ID, id) == 0) {
+            flag = true;
+            //delete the undone task from the mainlist
+            slow->next = fast->next; 
+            fast->next = NULL;
+
+            //re_add it to the end if the list 
+            tail->next = fast;
+            tail = fast;  //update tail to the new last node
+
+            //creat a new node for undone list
+            List newUndone = (List)malloc(sizeof(struct task));
+            if (newUndone == NULL) {
+                printf("Memory allocation failed!\n");
+                return;
+            }
+
+            newUndone->next = NULL;
+
+            //copy task information
+            strcpy(newUndone->ID, fast->ID);
+            strcpy(newUndone->name, fast->name);
+            strcpy(newUndone->date.day, fast->date.day);
+            strcpy(newUndone->date.month, fast->date.month);
+            strcpy(newUndone->date.year, fast->date.year);
+            strcpy(newUndone->duration, fast->duration);
+
+            //add to undone list
+            if (undone->next == NULL) { 
+                undone->next = newUndone;
+            }
+            else {
+                Task tail2 = undone;
+                while (tail2->next != NULL) {  
+                    tail2 = tail2->next;
+                }
+                tail2->next = newUndone;
+            }
+            break;
+        }
+        slow = fast;
+        fast = fast->next;
+    }
+    printf("Task is undone successfully:)\n");
+    if (!flag) {
+        printf("the Task ID you're trying to make undone is not found\n");
+    }
+}
+/*done*/void Exit() {
+    printf("BEST OF LUCK:)\n");
+}
+// function that write tasks to reprot file
+void writeToFile(List list) {
+    FILE* Report = fopen("Report.txt", "w");
+    if (Report == NULL) {
+        printf("Error openeing file!\n");
+        return;
+    }
+    if (list == NULL) {
+        fprintf(Report, "The list is empty!!\n\n");
+        fclose(Report);
+        return;
+    }
+    List temp = list->next;
+    while (temp != NULL) {
+        fprintf(Report, "%s\t", temp->ID);
+        fprintf(Report, "%s\t", temp->name);
+        fprintf(Report, "%s", temp->date.day);
+        fprintf(Report, "/%s", temp->date.month);
+        fprintf(Report, "/%s\t", temp->date.year);
+        fprintf(Report, "%s", temp->duration);
+
+        temp = temp->next;
+    }
+    fclose(Report);
+    //printf("Tasks written to \"Report.txt\" successfully:)\n\n");
+}
+//function that write tasks to reprot file according to their status 
+void summaryReport(List mainList, List performList, List undoneList) {
+    writeToFile(mainList);
+    printf("unperformed tasks has been written successfully:)\n");
+    writeToFile(undoneList);
+    printf("undone tasks has been written successfully:)\n");
+    writeToFile(performList);
+    printf("performed tasks has been written successfully:)\n");
 }
 int main()
 {
     int choice ,id;
     List mainList = creatList();
     List perfomedList = creatList();
-	List unperfomedList = creatList();
+	List undoneList = creatList();
+    List unperformedList = creatList();
     do {
-        printf("1.Load Tasks File\n");
+        printf("1. Load Tasks File\n");
         printf("2. Add a New Task\n");
         printf("3. Delete a Task\n");
         printf("4. Search for a Task\n");
@@ -448,7 +579,9 @@ int main()
         printf("6. Perform a Task\n");
         printf("7. Undo Last Performed Task\n");
         printf("8. View Performed Tasks\n");
-        printf("9. Generate Summary Report\n10. Exit\n");
+        printf("9. Generate Summary Report\n");
+        printf("10. Undone a Task\n");
+        printf("11. Exit\n");
         printf("Enter your choice:\n");
         scanf("%d", &choice); //read user's choice
         switch(choice) {
@@ -471,14 +604,28 @@ int main()
 		case 6:
 			performTask(mainList, perfomedList);
 			break;
+        case 7:
+            undo(mainList, perfomedList);
+            break;
         case 8:
 			printTasks(perfomedList);
 			break;
+        case 9:
+            writeToFile(perfomedList);
+            printf("performed tasks has been written successfully:)\n");
+            writeToFile(mainList);
+            printf("unperformed tasks has been written successfully:)\n");
+            printf("undone tasks has been written successfully:)\n");
+            //summaryReport(mainList, perfomedList, undoneList);
+            break;
         case 10:
+            undoneTask(mainList, undoneList);
+            break;
+        case 11:
             Exit();
             break;
         }
-    } while (choice != 10);
+    } while (choice != 11);
 
         return 0;
 }
