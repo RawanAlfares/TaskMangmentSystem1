@@ -18,7 +18,6 @@ struct task {
     Task next;
     Date date;
     char duration [20];
-    //char status[50];
 };
 int size = 0;
 typedef Task List;
@@ -55,7 +54,7 @@ List creatList() {
     return head;
 }
 //function that load tasks from file 
-/*done*/ void loadTasks(List head) {
+void loadTasks(List head) {
     FILE* in = fopen("tasks.txt", "r");
     char taskSize[200]; //maximum length of line (task)
 	if (in == NULL) {
@@ -132,7 +131,7 @@ List creatList() {
     fclose(in);
 }
 //function that search for tha task using id or name
-/*done*/bool searchTask(Task head) {
+bool searchTask(Task head) {
     if (head == NULL) {
         printf("Linked List Not Found..\n");
         return false;
@@ -180,7 +179,7 @@ List creatList() {
     return false;
 }
 //function that add task to the system
-/*done*/void addTask(Task head) {
+void addTask(Task head) {
     //creat a new task + store the value inside it + let it points to null 
     Task newTask = (Task)malloc(sizeof(struct task)); 
     if (newTask == NULL) {
@@ -201,8 +200,8 @@ List creatList() {
         target = target->next;
     }
     //get the name of the task
-    printf("Enter Task Name: \" only one word:) \" \n");
-    scanf("%s", newTask->name);
+    printf("Enter Task Name:\n");
+    scanf(" %[^\n]", newTask->name);
 
     //get the date of task (day,month,year)
     printf("Enter Task date(day, month, year) respectivly:\n");
@@ -231,7 +230,7 @@ List creatList() {
     printf("task has been added successfully:)\n\n");
 }
 //function that delete a specific task using its id
-/*done*/void deleteTask(Task head) {
+void deleteTask(Task head) {
     
     if (!isEmpty(head)) {  
         printf("Enter task ID to delete:\n");
@@ -294,7 +293,7 @@ List creatList() {
        
 }
 //overloaded function that delete a specific task from list and add it to perfom list
-/*done*/Task deleteTask(List head,char id[8]) {
+Task deleteTask(List head,char id[8]) {
     if (!isEmpty(head)) {
         Task target1 = head->next;
         bool flag1 = false;
@@ -353,7 +352,7 @@ List creatList() {
 
 }
 //function finds the last node of the list
-/*done*/List findTail(List list) {
+List findTail(List list) {
     List tail = list;
     while (tail->next != NULL) {
         tail = tail->next;
@@ -361,7 +360,7 @@ List creatList() {
     return tail;
 }
 //function that perform a task
-/*done*/void performTask(List head, List perform) {
+void performTask(List head, List perform) {
     printf("Enter task ID to perform:\n");
     char id[8];
     scanf("%s", id);
@@ -419,7 +418,7 @@ void printUnperformed(Task head) {
     printf("\n============================\n");
 }
 //function that prints  tasks 
-/*done*/void printTasks(Task head) {
+void printTasks(Task head) {
     if (head == NULL || head->next==NULL) {
         printf("Linked List Not Found..\n");
         return;
@@ -435,7 +434,7 @@ void printUnperformed(Task head) {
     }
     printf("\n============================\n");
 }
-/*done*/void undo(List head, List perform) {
+void undo(List head, List perform) {
     if (head == NULL || head->next == NULL || perform == NULL || perform->next == NULL) {
         printf("the list is empty or not found!\n");
         return;
@@ -461,7 +460,7 @@ void printUnperformed(Task head) {
     }
     printf("undo the last task successfully:)\n");
 }
-/*done*/void undoneTask(List head,List undone) {
+void undoneTask(List head,List undone) {
     if (head == NULL || head->next == NULL) {
         printf("the list is empty or not found!\n");
         return;
@@ -520,29 +519,35 @@ void printUnperformed(Task head) {
         slow = fast;
         fast = fast->next;
     }
-    printf("Task is undone successfully:)\n");
+    
     if (!flag) {
         printf("the Task ID you're trying to make undone is not found\n");
+        return;
     }
+    printf("Task is undone successfully:)\n");
 }
-/*done*/void Exit() {
+void Exit() {
     printf("BEST OF LUCK:)\n");
 }
 // function that write tasks to reprot file
-void writeToFile(List list) {
+void writeToFile(List mainList,List performed) {
     FILE* Report = fopen("Report.txt", "w");
     if (Report == NULL) {
         printf("Error openeing file!\n");
         return;
     }
-    if (list == NULL) {
-        fprintf(Report, "The list is empty!!\n\n");
-        fclose(Report);
+    if (performed == NULL || performed->next == NULL) {
+        fprintf(Report, "No tasks in performed list.\n");
         return;
     }
-    List temp = list->next;
+    if (mainList == NULL || mainList->next == NULL) {
+        fprintf(Report, "No tasks in unperformed or undone list.\n");
+        return;
+    }
+    List temp = performed->next;
+    fprintf(Report, "Performed tasks:\n\n");
     while (temp != NULL) {
-        fprintf(Report, "%s\t", temp->ID);
+        fprintf(Report, "\n%s\t", temp->ID);
         fprintf(Report, "%s\t", temp->name);
         fprintf(Report, "%s", temp->date.day);
         fprintf(Report, "/%s", temp->date.month);
@@ -551,17 +556,22 @@ void writeToFile(List list) {
 
         temp = temp->next;
     }
+
+    fprintf(Report, "\n\nunPerformed tasks and undone :\n\n");
+    List temp2 = mainList->next;
+    while (temp2 != NULL) {
+        fprintf(Report, "\n%s\t", temp2->ID);
+        fprintf(Report, "%s\t", temp2->name);
+        fprintf(Report, "%s", temp2->date.day);
+        fprintf(Report, "/%s", temp2->date.month);
+        fprintf(Report ,"/%s\t", temp2->date.year);
+        fprintf(Report, "%s", temp2->duration);
+
+        temp2 = temp2->next;
+    }
+
     fclose(Report);
     //printf("Tasks written to \"Report.txt\" successfully:)\n\n");
-}
-//function that write tasks to reprot file according to their status 
-void summaryReport(List mainList, List performList, List undoneList) {
-    writeToFile(mainList);
-    printf("unperformed tasks has been written successfully:)\n");
-    writeToFile(undoneList);
-    printf("undone tasks has been written successfully:)\n");
-    writeToFile(performList);
-    printf("performed tasks has been written successfully:)\n");
 }
 int main()
 {
@@ -569,7 +579,7 @@ int main()
     List mainList = creatList();
     List perfomedList = creatList();
 	List undoneList = creatList();
-    List unperformedList = creatList();
+    //List unperformedList = creatList();
     do {
         printf("1. Load Tasks File\n");
         printf("2. Add a New Task\n");
@@ -603,23 +613,28 @@ int main()
 			break;
 		case 6:
 			performTask(mainList, perfomedList);
+            printf("mainlist:\n");
+            printTasks(mainList);
+            printf("performed list\n");
+            printTasks(perfomedList);
 			break;
         case 7:
             undo(mainList, perfomedList);
+            printf("mainlist:\n==========================\n");
+            printTasks(mainList);
+            printf("performed list\n==========================\n");
+            printTasks(perfomedList);
             break;
         case 8:
 			printTasks(perfomedList);
 			break;
         case 9:
-            writeToFile(perfomedList);
-            printf("performed tasks has been written successfully:)\n");
-            writeToFile(mainList);
-            printf("unperformed tasks has been written successfully:)\n");
-            printf("undone tasks has been written successfully:)\n");
-            //summaryReport(mainList, perfomedList, undoneList);
+            writeToFile(mainList, perfomedList);
             break;
         case 10:
             undoneTask(mainList, undoneList);
+            printf("mainlist:\n==========================\n");
+            printTasks(mainList);
             break;
         case 11:
             Exit();

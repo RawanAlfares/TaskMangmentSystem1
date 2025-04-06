@@ -1,3 +1,18 @@
+Performed tasks:
+
+
+16	project	12/2/1233	12
+
+unPerformed tasks and undone :
+
+
 10	meeting	22/3/2025	1.5 
+
+12	shopping	21/3/2025	5.5 
+
+13	visit grandparents	24/3/2025	7 
+
+15	submit project 1	5/4/2025	0.1 
 11	attend lecture	25/3/2025	3 
-15	submit project 1	5/4/2025	0.1 13	visit grandparents	24/3/2025	7 
+
+14	study COMP2421 course	24/3/2025	3.5 
